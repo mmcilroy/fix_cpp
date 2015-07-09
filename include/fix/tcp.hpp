@@ -1,8 +1,5 @@
 #pragma once
 
-#include "fix/user.hpp"
-#include "fix/message.hpp"
-#include "fix/session.hpp"
 #include "fix/session_factory.hpp"
 
 class tcp_socket;
@@ -55,7 +52,7 @@ public:
         tcp_.recv_( *session_, fix::message( "55=VOD.L|" ) );
     }
 
-    virtual void respond( const fix::message& msg )
+    void respond( const fix::message& msg ) override
     {
         std::cout << ">>> " << msg << std::endl;
     }

@@ -1,2 +1,2 @@
-add_executable( test0 test0.cpp )
-target_link_libraries( test0 boost_system pthread )
+add_executable( app app.cpp )
+target_link_libraries( app tibems64 boost_system pthread )

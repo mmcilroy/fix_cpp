@@ -3,6 +3,7 @@
 #include "fix/message.hpp"
 #include "fix/responder.hpp"
 #include "fix/user.hpp"
+#include <functional>
 
 namespace fix {
 
