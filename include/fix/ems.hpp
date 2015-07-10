@@ -96,12 +96,12 @@ inline fix::ems_producer::ems_producer(
     session_->set_responder( this );
     tibemsTopic_Create( &destination_, topic.c_str() );
     tibemsSession_CreateProducer( ems_sess, &producer_, destination_ );
+
+    std::cout << "ems producer: " << topic << std::endl;
 }
 
 inline fix::ems_producer::~ems_producer()
 {
-    std::cout << "del ems_producer" << std::endl;
-
     if( session_ ) {
         session_->set_responder( nullptr );
     }
@@ -112,7 +112,7 @@ inline fix::ems_producer::~ems_producer()
 
 inline void fix::ems_producer::respond( const fix::message& msg )
 {
-    std::cout << ">>> " << msg << std::endl;
+    std::cout << "ems: " << msg << std::endl;
     tibemsTextMsg ems_msg;
     tibemsTextMsg_Create( &ems_msg );
     tibemsTextMsg_SetText( ems_msg, msg.str().c_str() );
@@ -140,6 +140,8 @@ fix::ems_consumer::ems_consumer( const std::string& topic, fix::ems& ems, tibems
     tibemsTopic_Create( &destination_, topic.c_str() );
     tibemsSession_CreateConsumer( session, &consumer_, destination_, NULL, TIBEMS_FALSE );
     tibemsMsgConsumer_SetMsgListener( consumer_, on_message, this );
+
+    std::cout << "ems consumer: " << topic << std::endl;
 }
 
 void fix::ems_consumer::consume( const fix::message& msg )
@@ -199,6 +201,8 @@ inline fix::ems::ems(
     if( status != TIBEMS_OK ) {
         fail();
     }
+
+    std::cout << "connected to ems: " << url << std::endl;
 }
 
 inline fix::ems::~ems()

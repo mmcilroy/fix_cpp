@@ -11,6 +11,8 @@ namespace fix {
 
 typedef uint32_t tag;
 
+typedef std::string type;
+
 class message
 {
 public:

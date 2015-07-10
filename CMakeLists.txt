@@ -10,6 +10,6 @@ endif()
 
 set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++11 -Wl,--no-as-needed -g" )
 
-include_directories( include /home/sm87110/pubsub_cpp/include /home/sm87110/tibcoems-6.11/include )
+include_directories( include /home/sm87110/pubsub_cpp/include /home/sm87110/tibcoems-6.11/include /usr/include/lua5.2 )
 link_directories( /home/sm87110/tibcoems-6.11/lib/64 /home/sm87110/tibcoems-6.11/lib )
 add_subdirectory( src )
