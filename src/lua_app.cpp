@@ -70,6 +70,7 @@ void l_pop_message( lua_State* l, fix::message& msg )
     }
 }
 
+#ifdef EMS
 int l_ems( lua_State* l )
 {
     const char* url = luaL_checkstring( l, -3 );
@@ -109,6 +110,42 @@ int l_ems_consumer( lua_State* l )
 
     return 0;
 }
+#endif
+
+int l_tcp( lua_State* l )
+{
+    fix::tcp** udata = (fix::tcp**)lua_newuserdata( l, sizeof( fix::tcp* ) );
+    *udata = app->tcp();
+    luaL_getmetatable( l, l_tcp_meta );
+    lua_setmetatable( l, -2 );
+
+    return 1;}
+
+int l_tcp_accept( lua_State* l )
+{
+    fix::tcp* tcp = *(fix::tcp**)lua_touserdata( l, -2 );
+    const char* conn = luaL_checkstring( l, -1 );
+
+    tcp->accept( conn );
+
+    return 0;
+}
+
+int l_tcp_connect( lua_State* l )
+{
+    fix::tcp* tcp = *(fix::tcpn**)lua_touserdata( l, -5 );
+    const char* topic = luaL_checkstring( l, -4 );
+    const char* protocol = luaL_checkstring( l, -3 );
+    const char* sender = luaL_checkstring( l, -2 );
+    const char* target = luaL_checkstring( l, -1 );
+    
+    fix::session** udata = (fix::session**)lua_newuserdata( l, sizeof( fix::session* ) );
+    *udata = ems->producer( topic, fix::user( protocol, sender, target ) );
+    luaL_getmetatable( l, l_session_meta );
+    lua_setmetatable( l, -2 );
+
+    return 1;
+}
 
 int l_session_send( lua_State* l )
 {
@@ -120,7 +157,10 @@ int l_session_send( lua_State* l )
 void l_register( lua_State* l )
 {
     luaL_Reg fix_reg[] = {
+#ifdef EMS
         { "ems", l_ems },
+#endif
+        { "tcp", l_tcp },
         { NULL, NULL }
     };
 
@@ -129,6 +169,7 @@ void l_register( lua_State* l )
     lua_pushvalue( l, -1 );
     lua_setglobal( l, "fix" );
 
+#ifdef EMS
     luaL_Reg ems_reg[] = {
         { "producer", l_ems_producer },
         { "consumer", l_ems_consumer },
@@ -140,6 +181,19 @@ void l_register( lua_State* l )
     lua_pushvalue( l, -1 );
     lua_setfield( l, -1, "__index" );
     lua_setglobal( l, "EMS" );
+#endif
+
+    luaL_Reg tcp_reg[] = {
+        { "accept", l_tcp_accept },
+        { "connect", l_tcp_connect },
+        { NULL, NULL }
+    };
+
+    luaL_newmetatable( l, l_tcp_meta );
+    luaL_setfuncs( l, tcp_reg, 0 );
+    lua_pushvalue( l, -1 );
+    lua_setfield( l, -1, "__index" );
+    lua_setglobal( l, "TCP" );
 
     luaL_Reg session_reg[] = {
         { "send", l_session_send },

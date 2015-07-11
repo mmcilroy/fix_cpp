@@ -1,6 +1,10 @@
 #pragma once
 
+#ifdef EMS
 #include "fix/ems.hpp"
+#endif
+
+#include "fix/tcp.hpp"
 #include "fix/event.hpp"
 #include <thread>
 
@@ -11,10 +15,14 @@ class app
 public:
     app();
 
+#ifdef EMS
     fix::ems* ems(
         const std::string& url,
         const std::string& user,
         const std::string& pass );
+#endif
+
+    fix::tcp* tcp();
 
     void send( fix::session&, const fix::type&, const fix::message& );
 
@@ -38,7 +46,11 @@ private:
     fix::event_subscriber& biz_sub_;
     fix::event_subscriber& out_sub_;
 
+#ifdef EMS
     std::list< std::unique_ptr< fix::ems > > ems_list_;
+#endif
+
+    std::list< std::unique_ptr< fix::tcp > > tcp_list_;
 
     std::thread biz_thr_;
     std::thread out_thr_;
@@ -61,6 +73,7 @@ fix::app::app() :
 {
 }
 
+#ifdef EMS
 fix::ems* fix::app::ems(
     const std::string& url,
     const std::string& user,
@@ -75,6 +88,19 @@ fix::ems* fix::app::ems(
 
     return ems_list_.back().get();
 }
+#endif
+
+fix::tcp* fix::app::tcp()
+{
+    tcp_list_.emplace_back( new fix::tcp( factory_, [&]( fix::session& sess, const fix::message& msg ) {
+        inp_pub_.publish( 1, [&]( fix::event& ev, size_t n ) {
+            ev.session_ = &sess;
+            ev.message_ = msg;
+        } );
+    } ) );
+
+    return tcp_list_.back().get();
+}
 
 void fix::app::send( fix::session& sess, const fix::type& type, const fix::message& msg )
 {
@@ -86,8 +112,14 @@ void fix::app::send( fix::session& sess, const fix::type& type, const fix::messa
 
 void fix::app::start()
 {
+#ifdef EMS
     for( auto& e : ems_list_ ) {
         e->start();
+    }
+#endif
+
+    for( auto& t : tcp_list_ ) {
+        t->start();
     }
 
     biz_thr_.join();
