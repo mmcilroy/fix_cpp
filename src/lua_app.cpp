@@ -28,6 +28,7 @@ lua_app* app;
 
 // ----------------------------------------------------------------------------
 const char* l_ems_meta = "ems_meta";
+const char* l_tcp_meta = "tcp_meta";
 const char* l_session_meta = "session_meta";
 
 void l_push_message( lua_State* l, const fix::message& msg )
@@ -133,14 +134,14 @@ int l_tcp_accept( lua_State* l )
 
 int l_tcp_connect( lua_State* l )
 {
-    fix::tcp* tcp = *(fix::tcpn**)lua_touserdata( l, -5 );
-    const char* topic = luaL_checkstring( l, -4 );
+    fix::tcp* tcp = *(fix::tcp**)lua_touserdata( l, -5 );
+    const char* conn = luaL_checkstring( l, -4 );
     const char* protocol = luaL_checkstring( l, -3 );
     const char* sender = luaL_checkstring( l, -2 );
     const char* target = luaL_checkstring( l, -1 );
     
     fix::session** udata = (fix::session**)lua_newuserdata( l, sizeof( fix::session* ) );
-    *udata = ems->producer( topic, fix::user( protocol, sender, target ) );
+    *udata = tcp->connect( conn, fix::user( protocol, sender, target ) );
     luaL_getmetatable( l, l_session_meta );
     lua_setmetatable( l, -2 );
 
@@ -149,7 +150,12 @@ int l_tcp_connect( lua_State* l )
 
 int l_session_send( lua_State* l )
 {
-    fix::session* sess = *(fix::session**)lua_touserdata( l, -1 );
+    fix::message msg;
+    fix::session* sess = *(fix::session**)lua_touserdata( l, 1 );
+    const char* type = luaL_checkstring( l, 2 );
+    l_pop_message( l, msg );
+
+    app->send( *sess, type, msg );
 
     return 0;
 }

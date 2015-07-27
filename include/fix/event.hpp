@@ -8,6 +8,7 @@ namespace fix {
 struct event
 {
     fix::session* session_;
+    fix::type type_;
     fix::message message_;
 };
 

@@ -42,6 +42,23 @@ typedef std::function< void( fix::session&, const fix::message& ) > receive_func
 
 
 // ----------------------------------------------------------------------------
+void set_utc_time( std::string& s )
+{
+    time_t t = time( 0 );
+    struct tm* utc = gmtime( &t );
+
+    char buf[32];
+    sprintf( buf, "%04d%02d%02d-%02d:%02d:%02d",
+        utc->tm_year+1900,
+        utc->tm_mon+1,
+        utc->tm_mday,
+        utc->tm_hour,
+        utc->tm_min,
+        utc->tm_sec );
+
+    s = buf;
+}
+
 fix::session::session( const fix::user& user ) :
     user_( user ),
     responder_( nullptr )
@@ -59,8 +76,35 @@ void fix::session::request( const fix::message& req )
 
 void fix::session::response( const std::string& type, const fix::message& body )
 {
-    if( responder_ ) {
-        responder_->respond( body );
+    if( responder_ )
+    {
+        std::string send_time;
+        set_utc_time( send_time );
+
+        fix::message msg;
+        fix::message hdr;
+        hdr.add( msg_type, type );
+        hdr.add( msg_seq_num, 1 );
+        hdr.add( sender_comp_id, user_.sender_ );
+        hdr.add( target_comp_id, user_.target_ );
+        hdr.add( sending_time, send_time );
+
+        msg.add( begin_string, user_.protocol_ );
+        msg.add( body_length, hdr.size() );
+        msg.add( hdr );
+        msg.add( body );
+
+        int checksum = 0;
+        for( int i=0; i<msg.size(); i++ ) {
+            checksum += (int)msg[i];
+        }
+
+        char buf[4];
+        sprintf( buf, "%03d", checksum % 256 );
+
+        msg.add( check_sum, buf );
+
+        responder_->respond( msg );
     }
 }
 

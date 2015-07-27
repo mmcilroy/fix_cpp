@@ -106,6 +106,7 @@ void fix::app::send( fix::session& sess, const fix::type& type, const fix::messa
 {
     out_pub_.publish( 1, [&]( fix::event& ev, size_t n ) {
         ev.session_ = &sess;
+        ev.type_ = type;
         ev.message_ = msg;
     } );
 }
@@ -145,9 +146,9 @@ void fix::app::out_thr_fn()
 {
     out_sub_.dispatch( [&]( const fix::event& ei, size_t rem )
     {
-        std::cout << "out: " << ei.message_ << std::endl;
+        std::cout << "out: " << ei.type_ << ", " << ei.message_ << std::endl;
 
-        ei.session_->response( "D", ei.message_ );
+        ei.session_->response( ei.type_, ei.message_ );
         return false;
     } );
 }

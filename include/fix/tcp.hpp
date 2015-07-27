@@ -82,7 +82,9 @@ public:
     {
         if( !err )
         {
-            decoder_.decode( buf_, len, [&]( const fix::message& msg ) {
+            decoder_.decode( buf_, len, [&]( const fix::message& msg )
+            {
+                std::cout << "<<< (tcp) " << msg << std::endl;
                 tcp_.recv_( *session_, msg );
             } );
             receive();
@@ -95,6 +97,13 @@ public:
 
     void respond( const fix::message& msg ) override
     {
+        std::cout << ">>> (tcp) " << msg << std::endl;
+
+        boost::asio::write(
+            socket_,
+            boost::asio::buffer(
+                msg.str().c_str(),
+                msg.size() ) );
     }
 
     fix::tcp& tcp_;
