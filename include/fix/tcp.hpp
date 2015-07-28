@@ -43,7 +43,7 @@ private:
 // ----------------------------------------------------------------------------
 const size_t buffer_size = 4*1024;
 
-class tcp_socket : public fix::responder
+class tcp_socket : public fix::transport
 {
 public:
     tcp_socket( fix::tcp& tcp ) :
@@ -57,13 +57,13 @@ public:
         session_( tcp.factory_.get_session( user ) ),
         socket_( tcp.io_ )
     {
-        session_->set_responder( this );
+        session_->set_transport( this );
     }
 
     ~tcp_socket()
     {
         if( session_ ) {
-            session_->set_responder( nullptr );
+            session_->set_transport( nullptr );
         }
     }
 
@@ -85,8 +85,16 @@ public:
             decoder_.decode( buf_, len, [&]( const fix::message& msg )
             {
                 std::cout << "<<< (tcp) " << msg << std::endl;
+
+                if( !session_ )
+                {
+                    session_ = tcp_.factory_.get_session( msg );
+                    session_->set_transport( this );
+                }
+
                 tcp_.recv_( *session_, msg );
             } );
+
             receive();
         }
         else
@@ -95,7 +103,7 @@ public:
         }
     }
 
-    void respond( const fix::message& msg ) override
+    void send( const fix::message& msg ) override
     {
         std::cout << ">>> (tcp) " << msg << std::endl;
 

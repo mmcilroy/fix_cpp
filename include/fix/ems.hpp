@@ -8,7 +8,7 @@ namespace fix {
 
 class ems;
 
-class ems_producer : public fix::responder
+class ems_producer : public fix::transport
 {
 public:
     ems_producer(
@@ -18,7 +18,7 @@ public:
 
     ~ems_producer();
 
-    void respond( const fix::message& msg ) override;
+    void send( const fix::message& msg ) override;
 
 private:
     fix::session* session_;
@@ -93,7 +93,7 @@ inline fix::ems_producer::ems_producer(
     tibemsSession& ems_sess ) :
     session_( &fix_sess )
 {
-    session_->set_responder( this );
+    session_->set_transport( this );
     tibemsTopic_Create( &destination_, topic.c_str() );
     tibemsSession_CreateProducer( ems_sess, &producer_, destination_ );
 
@@ -103,16 +103,17 @@ inline fix::ems_producer::ems_producer(
 inline fix::ems_producer::~ems_producer()
 {
     if( session_ ) {
-        session_->set_responder( nullptr );
+        session_->set_transport( nullptr );
     }
 
     tibemsMsgProducer_Close( producer_ );
     tibemsDestination_Destroy( destination_ );
 }
 
-inline void fix::ems_producer::respond( const fix::message& msg )
+inline void fix::ems_producer::send( const fix::message& msg )
 {
-    std::cout << "ems: " << msg << std::endl;
+    std::cout << ">>> (ems) " << msg << std::endl;
+
     tibemsTextMsg ems_msg;
     tibemsTextMsg_Create( &ems_msg );
     tibemsTextMsg_SetText( ems_msg, msg.str().c_str() );
@@ -146,6 +147,8 @@ fix::ems_consumer::ems_consumer( const std::string& topic, fix::ems& ems, tibems
 
 void fix::ems_consumer::consume( const fix::message& msg )
 {
+    std::cout << "<<< (ems) " << msg << std::endl;
+
     fix::session* session = ems_.fix_factory_.get_session( msg );
     ems_.recv_( *session, msg );
 }

@@ -135,8 +135,6 @@ void fix::app::biz_thr_fn()
 {
     biz_sub_.dispatch( [&]( const fix::event& ei, size_t rem )
     {
-        std::cout << "biz: " << ei.message_ << std::endl;
-
         on_event( *ei.session_, ei.message_ );
         return false;
     } );
@@ -146,9 +144,7 @@ void fix::app::out_thr_fn()
 {
     out_sub_.dispatch( [&]( const fix::event& ei, size_t rem )
     {
-        std::cout << "out: " << ei.type_ << ", " << ei.message_ << std::endl;
-
-        ei.session_->response( ei.type_, ei.message_ );
+        ei.session_->send( ei.type_, ei.message_ );
         return false;
     } );
 }

@@ -1,5 +1,5 @@
 cmake_minimum_required( VERSION 2.8 )
-project( stock_exchange_cpp )
+project( fix_cpp )
 set( VERSION_NUMBER "0.0.1" )
 
 if( "${CMAKE_BUILD_TYPE}" STREQUAL "Release" )
@@ -8,8 +8,19 @@ else()
     set( VERSION "${VERSION_NUMBER}-debug" )
 endif()
 
-set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++11 -Wl,--no-as-needed -g" )
+set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wl,--no-as-needed" )
 
-include_directories( include /home/mmcilroy/pubsub_cpp/include /home/mmcilroy/tibcoems-6.11/include /usr/include/lua5.2 )
-link_directories( /home/mmcilroy/tibcoems-6.11/lib/64 /home/mmcilroy/tibcoems-6.11/lib )
+if( "$ENV{ENABLE_EMS}" STREQUAL "1" )
+    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DEMS" )
+endif()
+
+find_package( Boost REQUIRED COMPONENTS system )
+
+if( "$ENV{ENABLE_EMS}" STREQUAL "1" )
+    include_directories( include $ENV{PUBSUB_INCLUDEDIR} ${Boost_INCLUDE_DIRS} $ENV{LUA_INCLUDEDIR} $ENV{EMS_INCLUDEDIR} )
+    link_directories( $ENV{EMS_LIBRARYDIR}/64 $ENV{EMS_LIBRARYDIR} )
+else()
+    include_directories( include $ENV{PUBSUB_INCLUDEDIR} ${Boost_INCLUDE_DIRS} $ENV{LUA_INCLUDEDIR} )
+endif()
+
 add_subdirectory( src )

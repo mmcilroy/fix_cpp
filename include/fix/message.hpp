@@ -47,8 +47,9 @@ private:
 // ----------------------------------------------------------------------------
 inline std::ostream& operator<<( std::ostream& out, const fix::message& msg )
 {
-    out << msg.str();
-    return out;
+    std::string str = msg.str();
+    std::replace( str.begin(), str.end(), fix::delim_char, '|' );
+    return out << str;
 }
 
 inline fix::message::message()

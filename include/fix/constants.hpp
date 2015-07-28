@@ -13,7 +13,7 @@ const int sending_time = 52;
 const int target_comp_id = 56;
 const int delim = (char)1;
 
-const char delim_char = '|'; //(char)1;
+const char delim_char = (char)1;
 const char delim_str[] = { delim_char, (char)0 };
 
 }

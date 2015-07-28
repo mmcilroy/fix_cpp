@@ -238,6 +238,16 @@ void lua_app::load( const std::string& file )
 
 void lua_app::on_event( fix::session& sess, const fix::message& msg )
 {
+    lua_getglobal( lua_, "on_event" );
+
+    fix::session** udata = (fix::session**)lua_newuserdata( lua_, sizeof( fix::session* ) );
+    *udata = &sess;
+    luaL_getmetatable( lua_, l_session_meta );
+    lua_setmetatable( lua_, -2 );
+
+    l_push_message( lua_, msg );
+
+    lua_call( lua_, 2, 0 );
 }
 
 int main( int argc, char** argv )
