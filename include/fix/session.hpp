@@ -91,11 +91,11 @@ void fix::session::send( const std::string& type, const fix::message& body )
         hdr.add( sender_comp_id, user_.sender_ );
         hdr.add( target_comp_id, user_.target_ );
         hdr.add( sending_time, send_time );
+        hdr.add( body );
 
         msg.add( begin_string, user_.protocol_ );
         msg.add( body_length, hdr.size() );
         msg.add( hdr );
-        msg.add( body );
 
         int checksum = 0;
         for( int i=0; i<msg.size(); i++ ) {

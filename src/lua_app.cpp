@@ -1,5 +1,7 @@
 #include "app.hpp"
 
+#include "fix/session.hpp"
+
 extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
@@ -120,7 +122,8 @@ int l_tcp( lua_State* l )
     luaL_getmetatable( l, l_tcp_meta );
     lua_setmetatable( l, -2 );
 
-    return 1;}
+    return 1;
+}
 
 int l_tcp_accept( lua_State* l )
 {
@@ -148,6 +151,14 @@ int l_tcp_connect( lua_State* l )
     return 1;
 }
 
+int l_time( lua_State* l )
+{
+    std::string s;
+    set_utc_time( s );
+    lua_pushstring( l, s.c_str() );
+    return 1;
+}
+
 int l_session_send( lua_State* l )
 {
     fix::message msg;
@@ -167,6 +178,7 @@ void l_register( lua_State* l )
         { "ems", l_ems },
 #endif
         { "tcp", l_tcp },
+        { "time", l_time },
         { NULL, NULL }
     };
 
