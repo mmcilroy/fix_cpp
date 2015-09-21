@@ -1,7 +1,7 @@
 #pragma once
 
 #include "fix/session.hpp"
-#include "publisher.hpp"
+#include "pubsub/publisher.hpp"
 
 namespace fix {
 
@@ -12,7 +12,7 @@ struct event
     fix::message message_;
 };
 
-typedef publisher< event, blocking_sequence > event_publisher;
-typedef subscriber< event, blocking_sequence > event_subscriber;
+typedef pubsub::publisher< event, pubsub::blocking_sequence > event_publisher;
+typedef pubsub::subscriber< event, pubsub::blocking_sequence > event_subscriber;
 
 }

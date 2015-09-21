@@ -5,6 +5,7 @@
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
+#include <map>
 #include <iostream>
 
 namespace fix {
@@ -12,6 +13,8 @@ namespace fix {
 typedef uint32_t tag;
 
 typedef std::string type;
+
+typedef std::map< tag, std::string > field_map;
 
 class message
 {
@@ -27,6 +30,10 @@ public:
 
     template< typename H >
     void parse( H ) const;
+
+    field_map map() const;
+
+    void map( const field_map& );
 
     size_t size() const;
 
@@ -84,6 +91,22 @@ inline void fix::message::parse( H handler ) const
         std::vector< std::string > strs;
         boost::split( strs, field, boost::is_any_of( "=" ) );
         handler( boost::lexical_cast< fix::tag >( strs[0] ), strs[1] );
+    }
+}
+
+inline fix::field_map fix::message::map() const
+{
+    field_map fmap;
+    parse( [ & ]( fix::tag t, const std::string& v ) {
+        fmap[ t ] = v;
+    } );
+    return fmap;
+}
+
+inline void fix::message::map( const fix::field_map& fmap )
+{
+    for( auto it = fmap.begin(); it != fmap.end(); it++ ) {
+        add( it->first, it->second );
     }
 }
 
