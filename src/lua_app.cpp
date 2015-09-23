@@ -2,6 +2,10 @@
 
 #include "fix/session.hpp"
 
+#include <boost/uuid/uuid.hpp>            // uuid class
+#include <boost/uuid/uuid_generators.hpp> // generators
+#include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
+
 extern "C" {
 #include <lua.h>
 #include <lauxlib.h>
@@ -159,6 +163,14 @@ int l_time( lua_State* l )
     return 1;
 }
 
+int l_id( lua_State* l )
+{
+    static auto generator = boost::uuids::random_generator();
+    boost::uuids::uuid uuid = generator();
+    lua_pushstring( l, to_string( uuid ).c_str() );
+    return 1;
+} 
+
 int l_session_send( lua_State* l )
 {
     fix::message msg;
@@ -179,6 +191,7 @@ void l_register( lua_State* l )
 #endif
         { "tcp", l_tcp },
         { "time", l_time },
+        { "id", l_id },
         { NULL, NULL }
     };
 
