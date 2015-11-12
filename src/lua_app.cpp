@@ -183,6 +183,14 @@ int l_session_send( lua_State* l )
     return 0;
 }
 
+int l_session_set_sequence( lua_State* l )
+{
+    fix::session* sess = *(fix::session**)lua_touserdata( l, 1 );
+    sess->set_sequence( luaL_checknumber( l, 2 ) );
+
+    return 0;
+}
+
 void l_register( lua_State* l )
 {
     luaL_Reg fix_reg[] = {
@@ -227,6 +235,7 @@ void l_register( lua_State* l )
     lua_setglobal( l, "TCP" );
 
     luaL_Reg session_reg[] = {
+        { "set_sequence", l_session_set_sequence },
         { "send", l_session_send },
         { NULL, NULL }
     };
