@@ -10,6 +10,7 @@ struct event
     fix::session* session_;
     fix::type type_;
     fix::message message_;
+    int time_;
 };
 
 typedef pubsub::publisher< event, pubsub::blocking_sequence > event_publisher;

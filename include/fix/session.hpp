@@ -18,9 +18,6 @@ public:
     // if the responder closes this method should be called nullptr
     void set_transport( fix::transport* );
 
-    // control send sequence
-    void set_sequence( int );
-
     // session has received a request
     // this will validate the message and update the sessions internal state
     // throws if the message is invalid
@@ -73,16 +70,7 @@ fix::session::session( const fix::user& user ) :
 
 void fix::session::set_transport( fix::transport* tp )
 {
-    if( tp == nullptr ) {
-        std::cout << "session closed" << std::endl;
-    }
-
     transport_ = tp;
-}
-
-void fix::session::set_sequence( int seq )
-{
-    sequence_ = seq;
 }
 
 void fix::session::recv( const fix::message& req )
@@ -100,8 +88,8 @@ void fix::session::send( const std::string& type, const fix::message& body )
         fix::message hdr;
         hdr.add( msg_type, type );
         hdr.add( msg_seq_num, ++sequence_ );
-        hdr.add( sender_comp_id, user_.sender_ );
-        hdr.add( target_comp_id, user_.target_ );
+        hdr.add( sender_comp_id, user_.target_ );
+        hdr.add( target_comp_id, user_.sender_ );
         hdr.add( sending_time, send_time );
         hdr.add( body );
 

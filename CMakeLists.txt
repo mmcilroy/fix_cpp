@@ -8,7 +8,7 @@ else()
     set( VERSION "${VERSION_NUMBER}-debug" )
 endif()
 
-set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wl,--no-as-needed -g" )
+set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wl,--no-as-needed" )
 
 if( "$ENV{ENABLE_EMS}" STREQUAL "1" )
     set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DEMS" )

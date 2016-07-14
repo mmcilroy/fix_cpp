@@ -22,7 +22,9 @@ public:
     void load( const std::string& file );
 
 protected:
-    void on_event( fix::session& sess, const fix::message& msg ) override;
+    void on_fix_event( fix::session& sess, const fix::message& msg ) override;
+
+    void on_timer_event( int secs ) override;
 
 private:
     lua_State* lua_;
@@ -171,6 +173,13 @@ int l_id( lua_State* l )
     return 1;
 } 
 
+int l_sleep( lua_State* l )
+{
+    int secs = luaL_checknumber( l, -1 );
+    sleep( secs );
+    return 0;
+}
+
 int l_session_send( lua_State* l )
 {
     fix::message msg;
@@ -179,14 +188,6 @@ int l_session_send( lua_State* l )
     l_pop_message( l, msg );
 
     app->send( *sess, type, msg );
-
-    return 0;
-}
-
-int l_session_set_sequence( lua_State* l )
-{
-    fix::session* sess = *(fix::session**)lua_touserdata( l, 1 );
-    sess->set_sequence( luaL_checknumber( l, 2 ) );
 
     return 0;
 }
@@ -200,6 +201,7 @@ void l_register( lua_State* l )
         { "tcp", l_tcp },
         { "time", l_time },
         { "id", l_id },
+        { "sleep", l_sleep },
         { NULL, NULL }
     };
 
@@ -235,7 +237,6 @@ void l_register( lua_State* l )
     lua_setglobal( l, "TCP" );
 
     luaL_Reg session_reg[] = {
-        { "set_sequence", l_session_set_sequence },
         { "send", l_session_send },
         { NULL, NULL }
     };
@@ -270,9 +271,9 @@ void lua_app::load( const std::string& file )
     }
 }
 
-void lua_app::on_event( fix::session& sess, const fix::message& msg )
+void lua_app::on_fix_event( fix::session& sess, const fix::message& msg )
 {
-    lua_getglobal( lua_, "on_event" );
+    lua_getglobal( lua_, "on_fix_event" );
 
     fix::session** udata = (fix::session**)lua_newuserdata( lua_, sizeof( fix::session* ) );
     *udata = &sess;
@@ -282,6 +283,13 @@ void lua_app::on_event( fix::session& sess, const fix::message& msg )
     l_push_message( lua_, msg );
 
     lua_call( lua_, 2, 0 );
+}
+
+void lua_app::on_timer_event( int time )
+{
+    lua_getglobal( lua_, "on_timer_event" );
+    lua_pushinteger( lua_, time );
+    lua_call( lua_, 1, 0 );
 }
 
 int main( int argc, char** argv )

@@ -8,7 +8,11 @@ public:
     }
 
 protected:
-    void on_event( fix::session& sess, const fix::message& msg ) override
+    void on_fix_event( fix::session& sess, const fix::message& msg ) override
+    {
+    }
+
+    void on_timer_event( int time ) override
     {
     }
 };
@@ -18,3 +22,4 @@ int main()
     native_app app;
     app.start();
 }
+

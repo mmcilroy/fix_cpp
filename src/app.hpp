@@ -33,9 +33,12 @@ public:
 protected:
 
 private:
-    virtual void on_event( fix::session&, const fix::message& ) = 0;
+    virtual void on_fix_event( fix::session&, const fix::message& ) = 0;
+
+    virtual void on_timer_event( int secs ) = 0;
 
     void biz_thr_fn();
+
     void out_thr_fn();
 
     fix::session_factory factory_;
@@ -54,6 +57,9 @@ private:
 
     std::thread biz_thr_;
     std::thread out_thr_;
+    std::thread timer_thr_;
+
+    std::mutex inp_mutex_;
 };
 
 }
@@ -80,9 +86,11 @@ fix::ems* fix::app::ems(
     const std::string& pass )
 {
     ems_list_.emplace_back( new fix::ems( url, user, pass, factory_, [&]( fix::session& sess, const fix::message& msg ) {
+        std::unique_lock< std::mutex > lock( inp_mutex_ );
         inp_pub_.publish( 1, [&]( fix::event& ev, size_t n ) {
             ev.session_ = &sess;
             ev.message_ = msg;
+            ev.time_ = -1;
         } );
     } ) );
 
@@ -93,9 +101,11 @@ fix::ems* fix::app::ems(
 fix::tcp* fix::app::tcp()
 {
     tcp_list_.emplace_back( new fix::tcp( factory_, [&]( fix::session& sess, const fix::message& msg ) {
+        std::unique_lock< std::mutex > lock( inp_mutex_ );
         inp_pub_.publish( 1, [&]( fix::event& ev, size_t n ) {
             ev.session_ = &sess;
             ev.message_ = msg;
+            ev.time_ = -1;
         } );
     } ) );
 
@@ -108,6 +118,7 @@ void fix::app::send( fix::session& sess, const fix::type& type, const fix::messa
         ev.session_ = &sess;
         ev.type_ = type;
         ev.message_ = msg;
+        ev.time_ = -1;
     } );
 }
 
@@ -123,8 +134,21 @@ void fix::app::start()
         t->start();
     }
 
+    timer_thr_ = std::thread( [&]() {
+        int time = 0;
+        while( 1 )
+        {
+            std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
+            std::unique_lock< std::mutex > lock( inp_mutex_ );
+            inp_pub_.publish( 1, [&]( fix::event& ev, size_t n ) {
+                ev.time_ = time++;
+            } );
+        }
+    } );
+
     biz_thr_.join();
     out_thr_.join();
+    timer_thr_.join();
 }
 
 void fix::app::stop()
@@ -135,7 +159,11 @@ void fix::app::biz_thr_fn()
 {
     biz_sub_.dispatch( [&]( const fix::event& ei, size_t rem )
     {
-        on_event( *ei.session_, ei.message_ );
+        if( ei.time_ == -1 ) {
+            on_fix_event( *ei.session_, ei.message_ );
+        } else {
+            on_timer_event( ei.time_ );
+        }
         return false;
     } );
 }
